@@ -7,6 +7,7 @@ const Home = resolve => require(['views/home/Home'],resolve);
 const Category = resolve => require(['views/category/Categroy'],resolve);
 const Cart = resolve => require(['views/cart/Cart'],resolve);
 const Profile = resolve => require(['views/profile/Profile'],resolve);
+const Detail = resolve => require(['views/detail/Detail'],resolve)
 
 //const Home = () => import('../views/home/Home')
 
@@ -34,6 +35,10 @@ const routes = [
   {
     path:'/profile',
     component:Profile
+  },
+  {
+    path:'/detail/:iid',
+    component:Detail
   },
 
 ]
