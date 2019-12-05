@@ -3,6 +3,9 @@
         <nav-bar class="home-nav">
             <div slot="center">购物街</div>
         </nav-bar>
+        <tab-controller :titles="['流行','新款','精选']"
+                        @tabClick="tabClick"
+                        ref="tabControl1" class="tab-control" v-show="isTabFixed"></tab-controller>
         <scroll class="content"
                 ref="scroll"
                 :probe-type="3"
@@ -10,11 +13,12 @@
                 :pull-up-load="true"
                 @pullingUp="loadMore"
                 >
-            <home-swiper :banners="banners"></home-swiper>
+            <home-swiper :banners="banners" @swiperImageLoad="swiperImageLoad"></home-swiper>
             <recommend-view :recommends="recommends"></recommend-view>
             <feature-view></feature-view>
-            <tab-controller class="tab-control"
-                            :titles="['流行','新款','精选']" @tabClick="tabClick"></tab-controller>
+            <tab-controller :titles="['流行','新款','精选']"
+                            @tabClick="tabClick"
+                            ref="tabControl2"></tab-controller>
             <goods-list :goods="showGoods"></goods-list>
         </scroll>
 
@@ -1032,7 +1036,9 @@
                     },
                 },
                 currentType:'pop',
-                isShowBackTop:false
+                isShowBackTop:false,
+                tabOffsetTop:0,
+                isTabFixed:false
         }
         },
         computed:{
@@ -1052,19 +1058,19 @@
 
         },
         mounted:function(){
+//            监听图片加载完成
             const refresh = debounce(this.$refs.scroll.refresh,50)
-
             //3.监听item中图片加载完成
             this.$bus.$on('itemImageLoad',() => {
 //                this.$refs.scroll.refresh()
                 refresh()
             })
+
         },
         methods:{
             /**
              *  事件监听相关方法
              */
-
             tabClick:function(index){
               switch (index){
                   case 0:
@@ -1077,17 +1083,31 @@
                       this.currentType = 'sell'
                       break;
               }
+                this.$refs.tabControl1.currentIndex = index;
+                this.$refs.tabControl2.currentIndex = index;
+
             },
             backClick:function() {
                 this.$refs.scroll.scrollTo(0,0);
             },
             contentScroll:function(position){
 //                console.log(position);
+//                判断BackTop是否显示
                 this.isShowBackTop = (-position.y) >1000
+
+//                决定tabcontrol是否吸顶position:fixed
+                this.isTabFixed = (-position.y) > this.tabOffsetTop
             },
             loadMore:function(){
 //                console.log('上拉加载更多');
                 this.getHomeGoods(this.currentType)
+            },
+            swiperImageLoad:function(){
+//             2.获取tabControl的offsetTop
+//            所有的组件都有一个属性$el：用于获取组件中的元素
+                this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop;
+//                console.log(this.tabOffsetTop);
+
             },
 
             /**
@@ -1109,7 +1129,6 @@
                     this.$refs.scroll.finishPullUp()
                 })
             },
-
         }
 
     }
@@ -1117,7 +1136,7 @@
 
 <style scoped>
     #home{
-        padding-top: 44px;
+        /*padding-top: 44px;*/
         /*vh:设置实扣高度*/
         height: 100vh;
         position: relative;
@@ -1128,21 +1147,22 @@
         color: #fff;
 
         /*固定顶部位置*/
-        position: fixed;
-        left: 0;
-        right: 0;
-        top: 0;
+        /*在使用浏览器原生滚动时，为了不让导航跟随一起滚动*/
+        /*position: fixed;*/
+        /*left: 0;*/
+        /*right: 0;*/
+        /*top: 0;*/
 
-        z-index: 9;
+        /*z-index: 9;*/
     }
 
-    .tab-control{
-        /*设置让标题固定*/
-        position: sticky;
-        top: 44px;
+    /*.tab-control{*/
+        /*/!*设置让标题固定*!/*/
+        /*position: sticky;*/
+        /*top: 44px;*/
 
-        z-index: 9;
-    }
+        /*z-index: 9;*/
+    /*}*/
 
     .content{
         overflow: hidden;
@@ -1154,6 +1174,13 @@
         right: 0;
 
     }
+
+    .tab-control{
+        position: relative;
+        z-index: 9;
+    }
+
+
 
     /*.content{*/
         /*height: calc(100% - 93px);*/
